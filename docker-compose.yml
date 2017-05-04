@@ -1,13 +1,13 @@
 version: '2'
 services:
-  web:
-    build: .
-    ports:
-     - "5000:5000"
-    volumes:
-     - .:/code
-  redis:
-    image: "redis:alpine"
+#  web:
+#    build: .
+#    ports:
+#     - "5000:5000"
+#    volumes:
+#     - .:/code
+#  redis:
+#    image: "redis:alpine"
 
   rabbitmq:
     image: "rabbitmq:3-management"
@@ -16,5 +16,10 @@ services:
 
   client:
     build: "./client/"
+    links:
+      - rabbitmq
+
+  assistant:
+    build: "./assistant/"
     links:
       - rabbitmq
