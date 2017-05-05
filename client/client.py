@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import datetime
 import pika
 import sys
 import time
@@ -20,7 +21,9 @@ while True:
                           properties=pika.BasicProperties(
                               delivery_mode = 2, # make message persistent
                           ))
-    print(" Sent %r" % message)
+    ts = time.time()
+    st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+    print("%r -  Sent %r" % (st, message))
     time.sleep(1)
 
 connection.close()

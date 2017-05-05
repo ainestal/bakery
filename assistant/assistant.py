@@ -13,9 +13,8 @@ def callback(ch, method, properties, body):
     ts = time.time()
     st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
     print("%r - Received %r" % (st, body))
-    time.sleep(body.count(b'.'))
-    print(" [x] Done")
     ch.basic_ack(delivery_tag = method.delivery_tag)
+    time.sleep(5)
 
 channel.basic_qos(prefetch_count=1)
 channel.basic_consume(callback,
