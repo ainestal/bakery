@@ -4,9 +4,6 @@ import pika
 import sys
 import time
 
-from redis import Redis
-
-redis = Redis(host='redis', port=6379)
 
 connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
 channel = connection.channel()
@@ -24,8 +21,6 @@ while True:
                           properties=pika.BasicProperties(
                               delivery_mode = 2, # make message persistent
                           ))
-
-    redis.set("orders", str(COUNTER) + " Brownies")
 
     ts = time.time()
     st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
