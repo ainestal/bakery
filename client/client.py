@@ -2,50 +2,68 @@
 import datetime
 from influxdb import InfluxDBClient
 import pika
-import sys
 import time
 
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
-channel = connection.channel()
-channel.queue_declare(queue='task_queue', durable=True)
+class Client:
+    queue_of_clients = []
+    notebook = []
 
+    def __init__(self):
+        self.queue_of_clients = self.setup_queue_connection()
+        self.notebook = self.setup_db_connection()
 
-client = InfluxDBClient('influxdb', 8086, 'root', 'root', 'bakery')
-client.create_database('bakery')
+    @staticmethod
+    def setup_queue_connection():
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
+        queue_of_clients = connection.channel()
+        queue_of_clients.queue_declare(queue='task_queue', durable=True)
+        return queue_of_clients
 
-def create_measurement():
-    ts = time.time()
-    st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-    return [
-        {
-            "measurement": "orders",
-            "tags": {
-                "from": "client",
-                "to": "assistant"
-            },
-            "time": st,
-            "fields": {
-                "value": 1
+    @staticmethod
+    def setup_db_connection():
+        notebook = InfluxDBClient('influxdb', 8086, 'root', 'root', 'bakery')
+        notebook.create_database('bakery')
+        return notebook
+
+    @staticmethod
+    def create_measurement():
+        ts = time.time()
+        st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+        return [
+            {
+                "measurement": "orders",
+                "tags": {
+                    "from": "client",
+                    "to": "assistant",
+                    "product": "brownie"
+                },
+                "time": st,
+                "fields": {
+                    "value": 1
+                }
             }
-        }
-    ]
+        ]
+
+    def place_order_in_queue(self, amount=1, product='Brownie'):
+        message = "%r %r" % (amount, product)
+        self.queue_of_clients.basic_publish(exchange='',
+                                            routing_key='task_queue',
+                                            body=message,
+                                            properties=pika.BasicProperties(
+                                                delivery_mode=2,  # make message persistent
+                                            ))
+
+    def write_order_in_notebook(self):
+        measurement = self.create_measurement()
+        self.notebook.write_points(measurement)
 
 
-COUNTER=0
-while True:
-    COUNTER += 1
-    message = ' '.join(sys.argv[1:]) or str(COUNTER) + " 1 Brownie"
-    channel.basic_publish(exchange='',
-                          routing_key='task_queue',
-                          body=message,
-                          properties=pika.BasicProperties(
-                              delivery_mode = 2, # make message persistent
-                          ))
-    measurement = create_measurement()
-    client.write_points(measurement)
+def main():
+    client = Client()
+    while True:
+        client.place_order_in_queue()
+        time.sleep(1)
 
-    print("Sent and saved %r" % message)
-    time.sleep(1)
-
-connection.close()
+if __name__ == '__main__':
+    main()
