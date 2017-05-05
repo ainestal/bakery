@@ -8,7 +8,11 @@ In this shop there are:
  - clients: they place bakery orders
  - assistants: they talk to the clients and to the baker
  - baker: Not implemented yet
- 
+
+## What you need to run it
+ - Docker
+ - [docker-compose](https://docs.docker.com/compose/install/)
+
 ## How to run it
 ```$ docker-compose build && docker-compose up -d```
 
@@ -24,4 +28,3 @@ Use a browser to connect to
  $ docker-compose scale client=5
  $ docker-compose scale assistant=2
  ```
- 
