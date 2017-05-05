@@ -6,6 +6,11 @@ services:
     ports:
       - "3000:3000"
 
+  influxdb:
+    image: "influxdb:1.1"
+    ports:
+      - "8086:8086"
+
   rabbitmq:
     image: "rabbitmq:3-management"
     ports:
@@ -13,10 +18,14 @@ services:
 
   client:
     build: "./client/"
+    restart: on-failure
     links:
+      - influxdb
       - rabbitmq
 
   assistant:
     build: "./assistant/"
+    restart: on-failure
     links:
+      - influxdb
       - rabbitmq
