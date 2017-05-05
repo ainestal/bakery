@@ -1,13 +1,17 @@
 version: '2'
+
 services:
-#  web:
-#    build: .
-#    ports:
-#     - "5000:5000"
-#    volumes:
-#     - .:/code
-#  redis:
-#    image: "redis:alpine"
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    links:
+      - redis
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
 
   rabbitmq:
     image: "rabbitmq:3-management"
@@ -18,8 +22,10 @@ services:
     build: "./client/"
     links:
       - rabbitmq
+      - redis
 
   assistant:
     build: "./assistant/"
     links:
       - rabbitmq
+      - redis
