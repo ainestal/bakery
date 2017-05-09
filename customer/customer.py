@@ -5,7 +5,7 @@ import pika
 import time
 
 
-class Client:
+class Customer:
     queue_of_clients = []
     notebook = []
 
@@ -17,7 +17,7 @@ class Client:
     def setup_queue_connection():
         connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
         queue_of_clients = connection.channel()
-        queue_of_clients.queue_declare(queue='task_queue', durable=True)
+        queue_of_clients.queue_declare(queue='customer_queue', durable=True)
         return queue_of_clients
 
     @staticmethod
@@ -34,7 +34,7 @@ class Client:
             {
                 "measurement": "orders",
                 "tags": {
-                    "from": "client",
+                    "from": "customer",
                     "to": "assistant",
                     "product": "brownie"
                 },
@@ -48,7 +48,7 @@ class Client:
     def place_order_in_queue(self, amount=1, product='Brownie'):
         message = "%r %r" % (amount, product)
         self.queue_of_clients.basic_publish(exchange='',
-                                            routing_key='task_queue',
+                                            routing_key='customer_queue',
                                             body=message,
                                             properties=pika.BasicProperties(
                                                 delivery_mode=2,  # make message persistent
@@ -60,9 +60,9 @@ class Client:
 
 
 def main():
-    client = Client()
+    customer = Customer()
     while True:
-        client.place_order_in_queue()
+        customer.place_order_in_queue()
         time.sleep(1)
 
 if __name__ == '__main__':

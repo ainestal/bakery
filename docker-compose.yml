@@ -1,10 +1,11 @@
-version: '2'
-
+version: '3'
 services:
   grafana:
     image: grafana/grafana
     ports:
       - "3000:3000"
+    links:
+      - influxdb
 
   influxdb:
     image: "influxdb:1.1"
@@ -17,7 +18,7 @@ services:
       - "8080:15672"
 
   client:
-    build: "./client/"
+    build: "./customer/"
     restart: on-failure
     links:
       - influxdb

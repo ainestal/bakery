@@ -11,30 +11,32 @@ class Assistant:
         self.queue_of_clients = self.setup_queue_connection()
         print(' [*] Waiting for messages. To exit press CTRL+C')
 
+    def callback(self, ch, method, properties, body):
+        self.do_something()
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+
+    @staticmethod
+    def do_something():
+        time.sleep(1)
+
     @staticmethod
     def setup_queue_connection():
         connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
         queue_of_clients = connection.channel()
-        queue_of_clients.queue_declare(queue='task_queue', durable=True)
+        queue_of_clients.queue_declare(queue='customer_queue', durable=True)
         return queue_of_clients
 
-    @staticmethod
-    def callback(ch, method, properties, body):
-        ts = time.time()
-        st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-        print("%r - Received %r" % (st, body))
-        ch.basic_ack(delivery_tag=method.delivery_tag)
-        time.sleep(0.1)
+    def wake_up(self):
+        self.watch_customer_queue()
 
-    def consume(self):
+    def watch_customer_queue(self):
         self.queue_of_clients.basic_qos(prefetch_count=1)
-        self.queue_of_clients.basic_consume(self.callback, queue='task_queue')
+        self.queue_of_clients.basic_consume(self.callback, queue='customer_queue')
         self.queue_of_clients.start_consuming()
 
 
 def main():
-    Assistant().consume()
+    Assistant().wake_up()
 
 if __name__ == '__main__':
     main()
-
